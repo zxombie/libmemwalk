@@ -46,8 +46,20 @@ main(int argc, char *argv[])
 
 	ctx = mw_alloc_context(getpid());
 	while (mw_next_range(ctx, &region)) {
+		struct mw_subcontext *subctx;
+		struct mw_region subregion;
+
 		printf("%16lx - %16lx\n", region.addr,
 		    region.addr + region.size);
+
+		subctx = mw_alloc_subcontext(&region);
+
+		while (mw_next_subrange(subctx, &subregion)) {
+			printf("\t%16lx - %16lx\n", subregion.addr,
+			    subregion.addr + subregion.size);
+		}
+
+		mw_free_subcontext(subctx);
 	}
 	mw_free_context(ctx);
 

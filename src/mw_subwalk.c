@@ -31,89 +31,92 @@
  */
 
 #include <libmw.h>
+#include <mw_os.h>
 
+#include <sys/types.h>
+#include <sys/mman.h>
+
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <mach/mach.h>
-#include <mach/mach_vm.h>
-#include <mach/task.h>
-
-struct mw_context {
-	mach_port_t task;
-	vm_region_basic_info_data_64_t info;
-	mach_vm_address_t addr;
-	mach_vm_size_t size;
-	bool first;
+struct mw_subcontext {
+	struct mw_region *region;
+	size_t off;
+	size_t len;
+	mincore_vec vec[];
 };
 
-struct mw_context *
-mw_alloc_context(pid_t pid)
+struct mw_subcontext *
+mw_alloc_subcontext(struct mw_region *region)
 {
-	struct mw_context *ctx;
+	struct mw_subcontext *subctx;
+	size_t page_count;
+	int page_size;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL)
+	page_size = getpagesize();
+	page_count = (region->size + page_size - 1) / page_size;
+	subctx = calloc(1, sizeof(*subctx) + page_count);
+	if (subctx == NULL)
 		return (NULL);
 
-	task_for_pid(mach_task_self(), pid, &ctx->task);
-	ctx->addr = 0;
-	ctx->size = 1;
-	ctx->first = true;
+	subctx->region = region;
+	subctx->len = page_count;
+	if (mincore((caddr_t)region->addr, region->size, subctx->vec) != 0) {
+#ifdef __linux__
+#if __WORDSIZE != 64
+#error This will likely fail on non-64bit architectures
+#endif
+		/*
+		 * The vsyscall memory is in the kernel range so
+		 * mincore will fail with ENOMEM.
+		 */
+		if (errno == ENOMEM && region->addr >= (1ul << 63)) {
+			memset(subctx->vec, 1, subctx->len);
+			return (subctx);
+		}
+#endif
+		free(subctx);
+		return (NULL);
+	}
 
-	return (ctx);
-}
-
-void
-mw_free_context(struct mw_context *ctx)
-{
-	if (ctx == NULL)
-		return;
-
-	free(ctx);
+	return (subctx);
 }
 
 bool
-mw_next_range(struct mw_context *ctx, struct mw_region *region)
+mw_next_subrange(struct mw_subcontext *subctx, struct mw_region *region)
 {
-	vm_region_basic_info_data_64_t info;
-	mach_msg_type_number_t info_cnt;
-	mach_port_t object;
-	mach_vm_address_t addr;
-	mach_vm_size_t size;
-	kern_return_t rc;
-	bool found = false;
+	size_t off;
+	int page_size;
+	bool found;
 
-	memset(region, 0, sizeof(*region));
-	while (!found) {
-		addr = ctx->addr + ctx->size;
-		info_cnt = VM_REGION_BASIC_INFO_COUNT_64;
-		rc = mach_vm_region(ctx->task, &addr, &size,
-		    VM_REGION_BASIC_INFO, (vm_region_info_t)&info, &info_cnt,
-		    &object);
-		if (rc != KERN_SUCCESS) {
-			return (false);
-		}
-		if (ctx->first || addr != ctx->size + ctx->addr) {
-			found = true;
-		} else if (info.protection != ctx->info.protection ||
-		    info.max_protection != ctx->info.max_protection ||
-		    info.inheritance != ctx->info.inheritance ||
-		    info.shared != ctx->info.shared ||
-		    info.reserved != ctx->info.reserved) {
-			found = true;
-		}
-		if (found) {
-			region->addr = addr;
-			region-> size = size;
-			ctx->addr = addr;
-			ctx->size = size;
-			ctx->info = info;
-			ctx->first = false;
-		} else {
-			ctx->size += size;
-		}
+	found = false;
+	page_size = getpagesize();
+	while (subctx->off < subctx->len) {
+		off = subctx->off;
+		subctx->off++;
+		if (subctx->vec[off] != 0) {
+			if (!found) {
+				region->addr = subctx->region->addr +
+				    off * page_size;
+				region->size = page_size;
+				found = true;
+			} else {
+				region->size += page_size;
+			}
+		} else if (found)
+			break;
 	}
 
-	return (true);
+	return (found);
+}
+
+void
+mw_free_subcontext(struct mw_subcontext* subctx)
+{
+
+	if (subctx == NULL)
+		return;
+
+	free(subctx);
 }

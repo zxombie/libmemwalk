@@ -30,27 +30,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBMW_H_
-#define _LIBMW_H_
+#ifndef _MW_OS_H_
+#define _MW_OS_H_
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <unistd.h>
-
-struct mw_context;
-struct mw_subcontext;
-
-struct mw_region {
-	uintptr_t	addr;
-	size_t		size;
-};
-
-struct mw_context *mw_alloc_context(pid_t);
-void mw_free_context(struct mw_context *);
-bool mw_next_range(struct mw_context *, struct mw_region *);
-
-struct mw_subcontext *mw_alloc_subcontext(struct mw_region *);
-void mw_free_subcontext(struct mw_subcontext *);
-bool mw_next_subrange(struct mw_subcontext *, struct mw_region *);
+typedef char mincore_vec;
 
 #endif

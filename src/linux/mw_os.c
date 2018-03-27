@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct mw_context {
 	char *buf;
@@ -86,7 +87,7 @@ mw_next_range(struct mw_context *ctx, struct mw_region *region)
 {
 	char *ptr, *next;
 
-	(void)region;
+	memset(region, 0, sizeof(*region));
 
 	/* Read the line to be parsed */
 	if (getline(&ctx->buf, &ctx->len, ctx->fd) < 0)

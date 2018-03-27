@@ -11,6 +11,9 @@ endif ()
 
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 
-add_library (mw ${OS_DIR}/mw_os.c)
-target_include_directories (mw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library (mw
+    ${OS_DIR}/mw_os.c
+    mw_subwalk.c
+)
+target_include_directories (mw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${OS_DIR})
 target_link_libraries (mw LINK_PRIVATE ${OS_LIBS})

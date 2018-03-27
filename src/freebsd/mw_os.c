@@ -40,6 +40,7 @@
 #include <libprocstat.h>
 #include <kvm.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct mw_context {
 	struct procstat *prstat;
@@ -100,6 +101,7 @@ bool
 mw_next_range(struct mw_context *ctx, struct mw_region *region)
 {
 
+	memset(region, 0, sizeof(*region));
 	if (ctx->cur >= ctx->count)
 		return (false);
 
