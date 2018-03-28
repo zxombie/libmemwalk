@@ -17,3 +17,4 @@ script:
   - make
   - ./test/memwalk/memwalk
   - ./test/mprotect/mprotect
+  - ./test/mmap/mmap
