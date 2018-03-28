@@ -39,8 +39,26 @@
 
 #include <libmw.h>
 
+#ifdef __APPLE__
+#define	MW_PERM_EXTRA	MW_PERM_READ
+#else
+#define	MW_PERM_EXTRA	MW_PERM_NONE
+#endif
+
+static uint64_t prots[] = {
+    MW_PERM_NONE,
+    MW_PERM_READ | MW_PERM_EXTRA,
+    MW_PERM_WRITE | MW_PERM_EXTRA,
+    MW_PERM_EXECUTE | MW_PERM_EXTRA,
+    MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
+    MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+    MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+    MW_PERM_ALL | MW_PERM_EXTRA
+};
+
 #define MEM_LEN		(8 * page_size)
 #define	MAX_PROT	(PROT_READ | PROT_WRITE | PROT_EXEC)
+
 
 static void
 perm_string(char *buf, uint64_t perms)
@@ -80,7 +98,7 @@ main(int argc, char *argv[])
 {
 	struct mw_context *ctx;
 	struct mw_region region;
-	int page_size;
+	int i, page_size;
 	char *mem;
 
 	(void)argc;
@@ -103,8 +121,9 @@ main(int argc, char *argv[])
 	putchar('\n');
 
 	ctx = mw_alloc_context(getpid());
+	i = 0;
 	while (mw_next_range(ctx, &region)) {
-		char prot[4];
+		char prot[4], expected_prot[4];
 
 		if (region.addr + region.size <= (uintptr_t)mem)
 			continue;
@@ -112,8 +131,11 @@ main(int argc, char *argv[])
 			continue;
 
 		perm_string(prot, region.perms);
-		printf("%lx - %lx: %s\n", region.addr,
-		    region.addr + region.size, prot);
+		perm_string(expected_prot, prots[i]);
+		printf("%lx - %lx: %s %s\n", region.addr,
+		    region.addr + region.size, prot, expected_prot);
+		assert(prots[i] == region.perms);
+		i++;
 	}
 	mw_free_context(ctx);
 
