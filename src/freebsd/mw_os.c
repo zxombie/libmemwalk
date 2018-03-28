@@ -97,6 +97,22 @@ mw_free_context(struct mw_context *ctx)
 	free(ctx);
 }
 
+static uint64_t
+mw_freebsd_perms(vm_prot_t prot)
+{
+	uint64_t perms;
+
+	perms = 0;
+	if ((prot & KVME_PROT_READ) != 0)
+		perms |= MW_PERM_READ;
+	if ((prot & KVME_PROT_WRITE) != 0)
+		perms |= MW_PERM_WRITE;
+	if ((prot & KVME_PROT_EXEC) != 0)
+		perms |= MW_PERM_EXECUTE;
+
+	return (perms);
+}
+
 bool
 mw_next_range(struct mw_context *ctx, struct mw_region *region)
 {
@@ -108,6 +124,8 @@ mw_next_range(struct mw_context *ctx, struct mw_region *region)
 	region->addr = ctx->info[ctx->cur].kve_start;
 	region->size = ctx->info[ctx->cur].kve_end -
 	    ctx->info[ctx->cur].kve_start;
+	region->perms = mw_freebsd_perms(ctx->info[ctx->cur].kve_protection);
+	region->max_perms = MW_PERM_ALL;
 
 	ctx->cur++;
 

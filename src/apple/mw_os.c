@@ -73,6 +73,22 @@ mw_free_context(struct mw_context *ctx)
 	free(ctx);
 }
 
+static uint64_t
+mw_apple_perms(vm_prot_t prot)
+{
+	uint64_t perms;
+
+	perms = 0;
+	if ((prot & VM_PROT_READ) != 0)
+		perms |= MW_PERM_READ;
+	if ((prot & VM_PROT_WRITE) != 0)
+		perms |= MW_PERM_WRITE;
+	if ((prot & VM_PROT_EXECUTE) != 0)
+		perms |= MW_PERM_EXECUTE;
+
+	return (perms);
+}
+
 bool
 mw_next_range(struct mw_context *ctx, struct mw_region *region)
 {
@@ -105,7 +121,11 @@ mw_next_range(struct mw_context *ctx, struct mw_region *region)
 		}
 		if (found) {
 			region->addr = addr;
-			region-> size = size;
+			region->size = size;
+			region->perms = mw_apple_perms(ctx->info.protection);
+			region->max_perms =
+			    mw_apple_perms(ctx->info.max_protection);
+
 			ctx->addr = addr;
 			ctx->size = size;
 			ctx->info = info;

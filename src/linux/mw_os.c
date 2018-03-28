@@ -107,5 +107,23 @@ mw_next_range(struct mw_context *ctx, struct mw_region *region)
 	assert(region->size > region->addr);
 	region->size -= region->addr;
 
+	ptr = next + 1;
+	assert(*ptr == 'r' || *ptr == '-');
+	if (*ptr == 'r')
+		region->perms |= MW_PERM_READ;
+	ptr++;
+
+	assert(*ptr == 'w' || *ptr == '-');
+	if (*ptr == 'w')
+		region->perms |= MW_PERM_WRITE;
+	ptr++;
+
+	assert(*ptr == 'x' || *ptr == '-');
+	if (*ptr == 'x')
+		region->perms |= MW_PERM_EXECUTE;
+	ptr++;
+
+	region->max_perms = MW_PERM_ALL;
+
 	return (true);
 }

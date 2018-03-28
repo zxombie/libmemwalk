@@ -38,6 +38,19 @@
 
 #include <libmw.h>
 
+static void
+perm_string(char *buf, uint64_t perms)
+{
+	buf[0] = buf[1] = buf[2]  = '-';
+	buf[3] = '\0';
+	if ((perms & MW_PERM_READ) == MW_PERM_READ)
+		buf[0] = 'r';
+	if ((perms & MW_PERM_WRITE) == MW_PERM_WRITE)
+		buf[1] = 'w';
+	if ((perms & MW_PERM_EXECUTE) == MW_PERM_EXECUTE)
+		buf[2] = 'x';
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -48,9 +61,12 @@ main(int argc, char *argv[])
 	while (mw_next_range(ctx, &region)) {
 		struct mw_subcontext *subctx;
 		struct mw_region subregion;
+		char perm[4], max_perm[4];
 
-		printf("%16lx - %16lx\n", region.addr,
-		    region.addr + region.size);
+		perm_string(perm, region.perms);
+		perm_string(max_perm, region.max_perms);
+		printf("%16lx - %16lx: %s %s\n", region.addr,
+		    region.addr + region.size, perm, max_perm);
 
 		subctx = mw_alloc_subcontext(&region);
 

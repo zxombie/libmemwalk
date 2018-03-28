@@ -100,6 +100,8 @@ mw_next_subrange(struct mw_subcontext *subctx, struct mw_region *region)
 				region->addr = subctx->region->addr +
 				    off * page_size;
 				region->size = page_size;
+				region->perms = subctx->region->perms;
+				region->max_perms = subctx->region->max_perms;
 				found = true;
 			} else {
 				region->size += page_size;
