@@ -42,13 +42,14 @@
 #include "../tests.h"
 
 static void
-test(int idx)
+test(size_t idx)
 {
 	struct mw_context *ctx;
 	struct mw_region region;
 	int page_size;
 	char *mem;
 
+	assert(idx < nitems(tests));
 	page_size = getpagesize();
 	mem = mmap(NULL, page_size, tests[idx].prot,
 	    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);

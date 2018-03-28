@@ -92,6 +92,7 @@ main(int argc, char *argv[])
 		if (region.addr >= (uintptr_t)mem + MEM_LEN)
 			continue;
 
+		assert(i < nitems(tests));
 		perm_string(prot, region.perms);
 		perm_string(expected_prot, tests[i].expected);
 		printf("%lx - %lx: %s %s\n", region.addr,
