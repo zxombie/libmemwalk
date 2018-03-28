@@ -9,8 +9,6 @@ else ()
 	message (FATAL_ERROR "Unsupported Operating System")
 endif ()
 
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-
 add_library (mw
     ${OS_DIR}/mw_os.c
     mw_subwalk.c

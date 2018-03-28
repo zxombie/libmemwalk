@@ -80,8 +80,11 @@ main(int argc, char *argv[])
 {
 	struct mw_context *ctx;
 	struct mw_region region;
-	int page_size, ret;
+	int page_size;
 	char *mem;
+
+	(void)argc;
+	(void)argv;
 
 	page_size = getpagesize();
 	mem = mmap(NULL, MEM_LEN, MAX_PROT, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);

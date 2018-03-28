@@ -57,6 +57,9 @@ main(int argc, char *argv[])
 	struct mw_context *ctx;
 	struct mw_region region;
 
+	(void)argc;
+	(void)argv;
+
 	ctx = mw_alloc_context(getpid());
 	while (mw_next_range(ctx, &region)) {
 		struct mw_subcontext *subctx;
