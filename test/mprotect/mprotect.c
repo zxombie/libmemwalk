@@ -39,70 +39,10 @@
 
 #include <libmw.h>
 
-#ifndef nitems
-#define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
-#endif
+#include "../tests.h"
 
-#ifdef __APPLE__
-#define	MW_PERM_EXTRA	MW_PERM_READ
-#else
-#define	MW_PERM_EXTRA	MW_PERM_NONE
-#endif
-
-struct {
-	uint64_t expected;
-	int prot;
-} tests[] = {
-	{
-	    .expected = MW_PERM_NONE,
-	    .prot = PROT_NONE,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_EXTRA,
-	    .prot = PROT_READ,
-	},
-	{
-	    .expected = MW_PERM_WRITE | MW_PERM_EXTRA,
-	    .prot = PROT_WRITE,
-	},
-	{
-	    .expected = MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_WRITE,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_WRITE | PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_ALL | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_WRITE | PROT_EXEC,
-	}
-};
-
-#define MEM_LEN		(8 * page_size)
+#define MEM_LEN		(nitems(tests) * page_size)
 #define	MAX_PROT	(PROT_READ | PROT_WRITE | PROT_EXEC)
-
-
-static void
-perm_string(char *buf, uint64_t perms)
-{
-	buf[0] = buf[1] = buf[2]  = '-';
-	buf[3] = '\0';
-	if ((perms & MW_PERM_READ) == MW_PERM_READ)
-		buf[0] = 'r';
-	if ((perms & MW_PERM_WRITE) == MW_PERM_WRITE)
-		buf[1] = 'w';
-	if ((perms & MW_PERM_EXECUTE) == MW_PERM_EXECUTE)
-		buf[2] = 'x';
-}
 
 static void
 protect(void *mem, int len, int idx)

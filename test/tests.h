@@ -30,61 +30,68 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/mman.h>
+#ifndef _TEST_H_
+#define	_TEST_H_
 
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef nitems
+#define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
+#endif
 
-#include <libmw.h>
+#ifdef __APPLE__
+#define	MW_PERM_EXTRA	MW_PERM_READ
+#else
+#define	MW_PERM_EXTRA	MW_PERM_NONE
+#endif
 
-#include "../tests.h"
+struct {
+	uint64_t expected;
+	int prot;
+} tests[] = {
+	{
+	    .expected = MW_PERM_NONE,
+	    .prot = PROT_NONE,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_EXTRA,
+	    .prot = PROT_READ,
+	},
+	{
+	    .expected = MW_PERM_WRITE | MW_PERM_EXTRA,
+	    .prot = PROT_WRITE,
+	},
+	{
+	    .expected = MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_WRITE,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_WRITE | PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_ALL | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_WRITE | PROT_EXEC,
+	}
+};
 
-static void
-test(int idx)
+static inline void
+perm_string(char *buf, uint64_t perms)
 {
-	struct mw_context *ctx;
-	struct mw_region region;
-	int page_size;
-	char *mem;
-
-	page_size = getpagesize();
-	mem = mmap(NULL, page_size, tests[idx].prot,
-	    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-	if (mem == MAP_FAILED) {
-		perror("mmap");
-		exit(1);
-	}
-
-	ctx = mw_alloc_context(getpid());
-	while (mw_next_range(ctx, &region)) {
-		char prot[4];
-
-		if (region.addr + region.size <= (uintptr_t)mem)
-			continue;
-		if (region.addr >= (uintptr_t)mem + page_size)
-			continue;
-
-		perm_string(prot, region.perms);
-		printf("%lx - %lx: %s\n", region.addr,
-		    region.addr + region.size, prot);
-		assert(tests[idx].expected == region.perms);
-	}
-	mw_free_context(ctx);
-	munmap(mem, page_size);
+	buf[0] = buf[1] = buf[2]  = '-';
+	buf[3] = '\0';
+	if ((perms & MW_PERM_READ) == MW_PERM_READ)
+		buf[0] = 'r';
+	if ((perms & MW_PERM_WRITE) == MW_PERM_WRITE)
+		buf[1] = 'w';
+	if ((perms & MW_PERM_EXECUTE) == MW_PERM_EXECUTE)
+		buf[2] = 'x';
 }
 
-int
-main(int argc, char *argv[])
-{
-	size_t i;
-
-	(void)argc;
-	(void)argv;
-
-	for (i = 0; i < nitems(tests); i++)
-		test(i);
-
-	return (0);
-}
+#endif
