@@ -40,10 +40,10 @@
 struct mw_context;
 struct mw_subcontext;
 
+#define	MW_PERM_NONE	0
 #define	MW_PERM_READ	(1 << 0)
 #define	MW_PERM_WRITE	(1 << 1)
 #define	MW_PERM_EXECUTE	(1 << 2)
-
 #define	MW_PERM_ALL	(MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXECUTE)
 
 struct mw_region {
