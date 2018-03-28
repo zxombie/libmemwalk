@@ -16,3 +16,4 @@ before_script:
 script:
   - make
   - ./test/memwalk/memwalk
+  - ./test/mprotect/mprotect
