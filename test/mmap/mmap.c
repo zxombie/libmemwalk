@@ -71,12 +71,13 @@ test(size_t idx)
 
 		perm_string(prot, region.perms);
 		perm_string(expected_prot, tests[idx].expected);
-		printf("%lx - %lx: %s %s\n", region.addr,
+		printf("%#lx - %#lx: %s %s\n", region.addr,
 		    region.addr + region.size, prot, expected_prot);
 		assert(tests[idx].expected == region.perms);
 	}
 	mw_free_context(ctx);
 	munmap(mem, page_size);
+	putchar('\n');
 }
 
 int
