@@ -122,9 +122,9 @@ mw_next_range(struct mw_context *ctx, struct mw_region *region)
 		if (found) {
 			region->addr = addr;
 			region->size = size;
-			region->perms = mw_apple_perms(ctx->info.protection);
+			region->perms = mw_apple_perms(info.protection);
 			region->max_perms =
-			    mw_apple_perms(ctx->info.max_protection);
+			    mw_apple_perms(info.max_protection);
 
 			ctx->addr = addr;
 			ctx->size = size;
