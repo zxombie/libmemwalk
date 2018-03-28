@@ -59,7 +59,7 @@ test(int idx)
 
 	ctx = mw_alloc_context(getpid());
 	while (mw_next_range(ctx, &region)) {
-		char prot[4];
+		char prot[4], expected_prot[4];
 
 		if (region.addr + region.size <= (uintptr_t)mem)
 			continue;
@@ -67,8 +67,9 @@ test(int idx)
 			continue;
 
 		perm_string(prot, region.perms);
-		printf("%lx - %lx: %s\n", region.addr,
-		    region.addr + region.size, prot);
+		perm_string(expected_prot, tests[idx].expected);
+		printf("%lx - %lx: %s %s\n", region.addr,
+		    region.addr + region.size, prot, expected_prot);
 		assert(tests[idx].expected == region.perms);
 	}
 	mw_free_context(ctx);
