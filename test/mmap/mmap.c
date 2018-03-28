@@ -48,6 +48,7 @@ test(size_t idx)
 	struct mw_region region;
 	int page_size;
 	char *mem;
+	bool found;
 
 	assert(idx < nitems(tests));
 	page_size = getpagesize();
@@ -60,6 +61,7 @@ test(size_t idx)
 
 	printf("%p %p: %s\n", mem, mem + page_size, tests[idx].prot_str);
 
+	found = false;
 	ctx = mw_alloc_context(getpid());
 	while (mw_next_range(ctx, &region)) {
 		char prot[4], expected_prot[4];
@@ -69,12 +71,20 @@ test(size_t idx)
 		if (region.addr >= (uintptr_t)mem + page_size)
 			continue;
 
+		assert(!found);
 		perm_string(prot, region.perms);
 		perm_string(expected_prot, tests[idx].expected);
 		printf("%#lx - %#lx: %s %s\n", region.addr,
 		    region.addr + region.size, prot, expected_prot);
 		assert(tests[idx].expected == region.perms);
+		found = true;
 	}
+#ifndef __APPLE__
+	assert(found);
+#else
+	assert((found && tests[idx].prot != PROT_READ) ||
+	    (!found && tests[idx].prot == PROT_READ));
+#endif
 	mw_free_context(ctx);
 	munmap(mem, page_size);
 	putchar('\n');

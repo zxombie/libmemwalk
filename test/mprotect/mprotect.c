@@ -101,6 +101,7 @@ main(int argc, char *argv[])
 		i++;
 	}
 	mw_free_context(ctx);
+	assert(i == nitems(tests));
 
 	munmap(mem, MEM_LEN);
 	return (0);
