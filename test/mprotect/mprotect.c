@@ -39,21 +39,52 @@
 
 #include <libmw.h>
 
+#ifndef nitems
+#define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
+#endif
+
 #ifdef __APPLE__
 #define	MW_PERM_EXTRA	MW_PERM_READ
 #else
 #define	MW_PERM_EXTRA	MW_PERM_NONE
 #endif
 
-static uint64_t prots[] = {
-    MW_PERM_NONE,
-    MW_PERM_READ | MW_PERM_EXTRA,
-    MW_PERM_WRITE | MW_PERM_EXTRA,
-    MW_PERM_EXECUTE | MW_PERM_EXTRA,
-    MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
-    MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-    MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-    MW_PERM_ALL | MW_PERM_EXTRA
+struct {
+	uint64_t expected;
+	int prot;
+} tests[] = {
+	{
+	    .expected = MW_PERM_NONE,
+	    .prot = PROT_NONE,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_EXTRA,
+	    .prot = PROT_READ,
+	},
+	{
+	    .expected = MW_PERM_WRITE | MW_PERM_EXTRA,
+	    .prot = PROT_WRITE,
+	},
+	{
+	    .expected = MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_WRITE,
+	},
+	{
+	    .expected = MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    .prot = PROT_WRITE | PROT_EXEC,
+	},
+	{
+	    .expected = MW_PERM_ALL | MW_PERM_EXTRA,
+	    .prot = PROT_READ | PROT_WRITE | PROT_EXEC,
+	}
 };
 
 #define MEM_LEN		(8 * page_size)
@@ -74,31 +105,26 @@ perm_string(char *buf, uint64_t perms)
 }
 
 static void
-_protect(void *mem, int len, int prot, char *prot_str)
+protect(void *mem, int len, int idx)
 {
-	char err_str[128];
-	int errno_save, ret;
+	int ret;
 
 	assert(len > 0);
-	printf("%p %p %s\n", mem, mem + len, prot_str);
-	ret = mprotect(mem, len, prot);
+	printf("%p %p %x\n", mem, mem + len, tests[idx].prot);
+	ret = mprotect(mem, len, tests[idx].prot);
 	if (ret == -1) {
-		errno_save = errno;
-		snprintf(err_str, sizeof(err_str), "mprotect: %s", prot_str);
-		errno = errno_save;
-		perror(err_str);
+		perror("mprotect");
 		exit(1);
 	}
 }
-
-#define mw_protect(mem, len, prot)	_protect(mem, len, prot, #prot)
 
 int
 main(int argc, char *argv[])
 {
 	struct mw_context *ctx;
 	struct mw_region region;
-	int i, page_size;
+	size_t i;
+	int page_size;
 	char *mem;
 
 	(void)argc;
@@ -111,13 +137,9 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	mw_protect(mem + (0 * page_size), page_size, PROT_NONE);
-	mw_protect(mem + (1 * page_size), page_size, PROT_READ);
-	mw_protect(mem + (2 * page_size), page_size, PROT_WRITE);
-	mw_protect(mem + (3 * page_size), page_size, PROT_EXEC);
-	mw_protect(mem + (4 * page_size), page_size, PROT_READ | PROT_WRITE);
-	mw_protect(mem + (5 * page_size), page_size, PROT_READ | PROT_EXEC);
-	mw_protect(mem + (6 * page_size), page_size, PROT_WRITE | PROT_EXEC);
+	for (i = 0; i < nitems(tests); i++) {
+		protect(mem + (i * page_size), page_size, i);
+	}
 	putchar('\n');
 
 	ctx = mw_alloc_context(getpid());
@@ -131,10 +153,10 @@ main(int argc, char *argv[])
 			continue;
 
 		perm_string(prot, region.perms);
-		perm_string(expected_prot, prots[i]);
+		perm_string(expected_prot, tests[i].expected);
 		printf("%lx - %lx: %s %s\n", region.addr,
 		    region.addr + region.size, prot, expected_prot);
-		assert(prots[i] == region.perms);
+		assert(tests[i].expected == region.perms);
 		i++;
 	}
 	mw_free_context(ctx);
