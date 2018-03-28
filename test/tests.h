@@ -43,42 +43,30 @@
 #define	MW_PERM_EXTRA	MW_PERM_NONE
 #endif
 
+#define MW_TEST(_expected, _prot)			\
+{							\
+    .expected = _expected,				\
+    .prot_str = #_prot,					\
+    .prot = _prot,					\
+}
+
 struct {
 	uint64_t expected;
+	char *prot_str;
 	int prot;
 } tests[] = {
-	{
-	    .expected = MW_PERM_NONE,
-	    .prot = PROT_NONE,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_EXTRA,
-	    .prot = PROT_READ,
-	},
-	{
-	    .expected = MW_PERM_WRITE | MW_PERM_EXTRA,
-	    .prot = PROT_WRITE,
-	},
-	{
-	    .expected = MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_WRITE,
-	},
-	{
-	    .expected = MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
-	    .prot = PROT_WRITE | PROT_EXEC,
-	},
-	{
-	    .expected = MW_PERM_ALL | MW_PERM_EXTRA,
-	    .prot = PROT_READ | PROT_WRITE | PROT_EXEC,
-	}
+	MW_TEST(MW_PERM_NONE, PROT_NONE),
+	MW_TEST(MW_PERM_READ | MW_PERM_EXTRA, PROT_READ),
+	MW_TEST(MW_PERM_WRITE | MW_PERM_EXTRA, PROT_WRITE),
+	MW_TEST(MW_PERM_EXECUTE | MW_PERM_EXTRA, PROT_EXEC),
+	MW_TEST(MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXTRA,
+	    PROT_READ | PROT_WRITE),
+	MW_TEST(MW_PERM_WRITE | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    PROT_WRITE | PROT_EXEC),
+	MW_TEST(MW_PERM_READ | MW_PERM_EXECUTE | MW_PERM_EXTRA,
+	    PROT_READ | PROT_EXEC),
+	MW_TEST(MW_PERM_ALL | MW_PERM_EXTRA,
+	    PROT_READ | PROT_WRITE | PROT_EXEC),
 };
 
 static inline void

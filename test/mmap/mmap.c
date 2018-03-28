@@ -58,6 +58,8 @@ test(size_t idx)
 		exit(1);
 	}
 
+	printf("%p %p: %s\n", mem, mem + page_size, tests[idx].prot_str);
+
 	ctx = mw_alloc_context(getpid());
 	while (mw_next_range(ctx, &region)) {
 		char prot[4], expected_prot[4];

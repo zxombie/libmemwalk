@@ -50,7 +50,7 @@ protect(void *mem, int len, int idx)
 	int ret;
 
 	assert(len > 0);
-	printf("%p %p %x\n", mem, mem + len, tests[idx].prot);
+	printf("%p %p %s\n", mem, mem + len, tests[idx].prot_str);
 	ret = mprotect(mem, len, tests[idx].prot);
 	if (ret == -1) {
 		perror("mprotect");
