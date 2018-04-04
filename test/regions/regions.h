@@ -30,52 +30,12 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBMW_H_
-#define _LIBMW_H_
+#ifndef _REGIONS_H_
+#define _REGIONS_H_
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <unistd.h>
-
-struct mw_context;
-struct mw_subcontext;
-
-#define	MW_PERM_NONE	0
-#define	MW_PERM_READ	(1 << 0)
-#define	MW_PERM_WRITE	(1 << 1)
-#define	MW_PERM_EXECUTE	(1 << 2)
-#define	MW_PERM_ALL	(MW_PERM_READ | MW_PERM_WRITE | MW_PERM_EXECUTE)
-
-struct mw_region {
-	uintptr_t	addr;
-	size_t		size;
-	uint64_t	perms;
-	uint64_t	max_perms;
-};
-
-struct mw_context *mw_alloc_context(pid_t);
-void mw_free_context(struct mw_context *);
-bool mw_next_range(struct mw_context *, struct mw_region *);
-
-struct mw_subcontext *mw_alloc_subcontext(struct mw_region *);
-void mw_free_subcontext(struct mw_subcontext *);
-bool mw_next_subrange(struct mw_subcontext *, struct mw_region *);
-
-/*
- * Handlers for regions of memory where we are building it up based on
- * a bottom up approach. We create a collection, then add more memory
- * to it based on some condition. The collection handles coalescing as
- * appropriate.
- */
-struct mw_region_collection {
-	unsigned int region_count;
-	unsigned int alloc_count;
-	struct mw_region *regions;
-};
-
-struct mw_region_collection *mw_region_collection_alloc(void);
-bool mw_region_collection_add(struct mw_region_collection *,
-    struct mw_region *);
-void mw_region_collection_free(struct mw_region_collection *);
+void test_add_same_perms(void);
+void test_add_less_perms(void);
+void test_add_more_perms(void);
+void test_add_diff_perms(void);
 
 #endif

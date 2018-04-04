@@ -11,6 +11,7 @@ endif ()
 
 add_library (mw
     ${OS_DIR}/mw_os.c
+    mw_regions.c
     mw_subwalk.c
 )
 target_include_directories (mw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${OS_DIR})
