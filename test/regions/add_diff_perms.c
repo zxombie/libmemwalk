@@ -37,6 +37,15 @@
 
 #include "regions.h"
 
+static int cb_count;
+
+static void
+add_diff_cb(void)
+{
+
+	cb_count++;
+}
+
 static struct mw_region_collection *
 alloc_initial_col(void)
 {
@@ -44,8 +53,10 @@ alloc_initial_col(void)
 	struct mw_region_collection *col;
 	bool ret;
 
-	col = mw_region_collection_alloc();
+	cb_count = 0;
+	col = mw_region_collection_alloc(add_diff_cb);
 	assert(col != NULL);
+	assert(cb_count == 0);
 	assert(col->region_count == 0);
 
 	memset(&region, 0, sizeof(region));
@@ -54,6 +65,7 @@ alloc_initial_col(void)
 	region.perms = MW_PERM_READ;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 1);
 
 	return (col);
 }
@@ -81,6 +93,7 @@ test_diff_perms_samearea(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -95,6 +108,7 @@ test_diff_perms_samearea(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 2);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -129,6 +143,7 @@ test_diff_perms_start(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -143,6 +158,7 @@ test_diff_perms_start(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 2);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0xff000);
 	assert(col->regions[0].size == 0x1000);
@@ -179,6 +195,7 @@ test_diff_perms_start2(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -193,6 +210,7 @@ test_diff_perms_start2(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0xff000);
 	assert(col->regions[0].size == 0x1000);
@@ -244,6 +262,7 @@ test_diff_perms_end(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -259,6 +278,7 @@ test_diff_perms_end(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x800);
@@ -279,6 +299,7 @@ test_diff_perms_end(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x800);
@@ -301,6 +322,7 @@ test_diff_perms_end(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x800);
@@ -338,6 +360,7 @@ test_diff_perms_gap(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -349,6 +372,7 @@ test_diff_perms_gap(void)
 	region.perms = MW_PERM_READ;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 2);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -362,6 +386,7 @@ test_diff_perms_gap(void)
 	region.perms = MW_PERM_WRITE;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -399,6 +424,7 @@ test_diff_perms_gap2(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -410,6 +436,7 @@ test_diff_perms_gap2(void)
 	region.perms = MW_PERM_READ;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 2);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -428,6 +455,7 @@ test_diff_perms_gap2(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 5);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x800);
@@ -471,6 +499,7 @@ test_diff_perms_gap3(void)
 
 	col = alloc_initial_col();
 	assert(col != NULL);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -482,6 +511,7 @@ test_diff_perms_gap3(void)
 	region.perms = MW_PERM_READ;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 2);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -495,6 +525,7 @@ test_diff_perms_gap3(void)
 	region.perms = MW_PERM_WRITE;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);

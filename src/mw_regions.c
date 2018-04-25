@@ -40,13 +40,15 @@
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 struct mw_region_collection *
-mw_region_collection_alloc(void)
+mw_region_collection_alloc(mw_region_cb *cb)
 {
 	struct mw_region_collection *col;
 
 	col = calloc(1, sizeof(*col));
 	if (col == NULL)
 		return (NULL);
+
+	col->region_cb = cb;
 
 	return (col);
 }
@@ -156,6 +158,8 @@ mw_add_region(struct mw_region_collection *col, unsigned int pos,
 	if (pos != 0 && col->regions[pos - 1].perms == region->perms &&
 	    col->regions[pos - 1].addr + col->regions[pos - 1].size ==
 	    region->addr) {
+		if (col->region_cb != NULL)
+			col->region_cb();
 		col->regions[pos - 1].size += size;
 		if (!mw_consume_region(col, pos - 1, region))
 			return (-1);
@@ -167,6 +171,9 @@ mw_add_region(struct mw_region_collection *col, unsigned int pos,
 		col->regions[i] = col->regions[i - 1];
 	}
 	col->region_count++;
+
+	if (col->region_cb != NULL)
+		col->region_cb();
 	col->regions[pos] = *region;
 	col->regions[pos].size = size;
 
@@ -192,7 +199,11 @@ mw_region_extend(struct mw_region_collection *col, unsigned int pos,
 			size = max_size;
 	}
 
-	col->regions[pos].size += size;
+	if (size > 0) {
+		if (col->region_cb != NULL)
+			col->region_cb();
+		col->regions[pos].size += size;
+	}
 	if (!mw_consume_region(col, pos, region))
 		return (-1);
 	return (1);
@@ -295,6 +306,8 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 			/* The region starts before the current region */
 			assert(region->addr + region->size >=
 			    col->regions[pos].addr);
+			if (col->region_cb != NULL)
+				col->region_cb();
 			col->regions[pos].size +=
 			    col->regions[pos].addr - region->addr;
 			col->regions[pos].addr = region->addr;
@@ -304,6 +317,10 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 			return (0);
 		} else if (region->addr <
 		    col->regions[pos].addr + col->regions[pos].size) {
+			/*
+			 * As this will just consume already allocated space
+			 * we don't need to run the callback.
+			 */
 			if (!mw_consume_region(col, pos, region))
 				return (-1);
 			return (0);
@@ -333,6 +350,8 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 		    region->size >= col->regions[pos].size) {
 			bool merged = false;
 
+			if (col->region_cb != NULL)
+				col->region_cb();
 			col->regions[pos].perms |= region->perms;
 			if (pos > 0) {
 				if (!mw_merge_regions(col, pos - 1, region,
@@ -358,6 +377,8 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 			}
 			col->region_count++;
 
+			if (col->region_cb != NULL)
+				col->region_cb();
 			col->regions[pos] = *region;
 			col->regions[pos].perms =
 			    region->perms | col->regions[pos + 1].perms;
@@ -383,6 +404,8 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 			}
 			col->region_count++;
 
+			if (col->region_cb != NULL)
+				col->region_cb();
 			col->regions[i].size =
 			    region->addr - col->regions[pos].addr;
 			col->regions[i + 1].size -= col->regions[i].size;
@@ -401,6 +424,8 @@ mw_insert_region(struct mw_region_collection *col, unsigned int pos,
 		}
 		col->region_count++;
 
+		if (col->region_cb != NULL)
+			col->region_cb();
 		col->regions[pos + 1] = *region;
 		if (pos < col->region_count - 2) {
 			size_t max_size;
@@ -476,6 +501,8 @@ mw_region_collection_add(struct mw_region_collection *col,
 
 	if (!mw_check_space(col, 1))
 		return (false);
+	if (col->region_cb != NULL)
+		col->region_cb();
 	col->regions[i] = *region;
 	col->region_count++;
 	return (true);

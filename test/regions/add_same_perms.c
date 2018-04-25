@@ -37,6 +37,15 @@
 
 #include "regions.h"
 
+static int cb_count;
+
+static void
+add_same_cb(void)
+{
+
+	cb_count++;
+}
+
 static void
 test_expand(struct mw_region_collection *col)
 {
@@ -44,6 +53,7 @@ test_expand(struct mw_region_collection *col)
 	bool ret;
 
 	/* Check the initial state is as we expect */
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -51,7 +61,7 @@ test_expand(struct mw_region_collection *col)
 	memset(&region, 0, sizeof(region));
 
 	/* Adding a region overlapping the current region should expand */
-	region.addr = 0x100000 - 0x1000;
+	region.addr = 0xff000;
 	region.size = 0x3000;
 	region.perms = MW_PERM_ALL;
 	assert(col->regions[0].addr > region.addr);
@@ -59,6 +69,7 @@ test_expand(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 3);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xff000);
 	assert(col->regions[0].size == 0x3000);
@@ -72,6 +83,7 @@ test_expand(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 4);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xff000);
 	assert(col->regions[0].size == 0x4000);
@@ -85,6 +97,7 @@ test_expand(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -97,6 +110,7 @@ test_subset(struct mw_region_collection *col)
 	bool ret;
 
 	/* Check the initial state is as we expect */
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -112,6 +126,7 @@ test_subset(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -125,6 +140,7 @@ test_subset(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -138,6 +154,7 @@ test_subset(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -150,6 +167,7 @@ test_overlap_start(struct mw_region_collection *col)
 	bool ret;
 
 	/* Check the initial state is as we expect */
+	assert(cb_count == 5);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfe000);
 	assert(col->regions[0].size == 0x5000);
@@ -164,6 +182,7 @@ test_overlap_start(struct mw_region_collection *col)
 	assert(col->regions[0].addr == region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 6);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfd000);
 	assert(col->regions[0].size == 0x6000);
@@ -178,6 +197,7 @@ test_overlap_start(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 7);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x7000);
@@ -190,6 +210,7 @@ test_overlap_end(struct mw_region_collection *col)
 	bool ret;
 
 	/* Check the initial state is as we expect */
+	assert(cb_count == 7);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x7000);
@@ -205,6 +226,7 @@ test_overlap_end(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 8);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x8000);
@@ -218,6 +240,7 @@ test_overlap_end(struct mw_region_collection *col)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 9);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x9000);
@@ -230,12 +253,14 @@ test_add_same_perms(void)
 	struct mw_region_collection *col;
 	bool ret;
 
-	col = mw_region_collection_alloc();
+	col = mw_region_collection_alloc(add_same_cb);
 	assert(col != NULL);
 	assert(col->region_count == 0);
+	assert(cb_count == 0);
 
 	ret = mw_region_collection_add(col, NULL);
 	assert(ret);
+	assert(cb_count == 0);
 	assert(col->region_count == 0);
 
 	memset(&region, 0, sizeof(region));
@@ -244,6 +269,7 @@ test_add_same_perms(void)
 	region.perms = MW_PERM_ALL;
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -251,6 +277,8 @@ test_add_same_perms(void)
 	/* Adding an identically sized entry should be a nop */
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	/* It shouldn't call the callback for a nop */
+	assert(cb_count == 1);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x100000);
 	assert(col->regions[0].size == 0x1000);
@@ -260,6 +288,7 @@ test_add_same_perms(void)
 	test_overlap_start(col);
 	test_overlap_end(col);
 
+	assert(cb_count == 9);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x9000);
@@ -271,6 +300,7 @@ test_add_same_perms(void)
 	assert(col->regions[0].addr + col->regions[0].size < region.addr);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 10);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0xfc000);
 	assert(col->regions[0].size == 0x9000);
@@ -284,6 +314,7 @@ test_add_same_perms(void)
 	assert(col->regions[0].addr > region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 11);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x1000);
 	assert(col->regions[0].size == 0x1000);
@@ -300,6 +331,7 @@ test_add_same_perms(void)
 	assert(col->regions[1].addr > region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 12);
 	assert(col->region_count == 4);
 	assert(col->regions[0].addr == 0x1000);
 	assert(col->regions[0].size == 0x1000);
@@ -318,6 +350,7 @@ test_add_same_perms(void)
 	assert(col->regions[1].addr == region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 13);
 	assert(col->region_count == 3);
 	assert(col->regions[0].addr == 0x1000);
 	assert(col->regions[0].size == 0x3000);
@@ -337,6 +370,7 @@ test_add_same_perms(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 14);
 	assert(col->region_count == 2);
 	assert(col->regions[0].addr == 0x1000);
 	assert(col->regions[0].size == 0x104000);
@@ -352,6 +386,7 @@ test_add_same_perms(void)
 	    region.addr + region.size);
 	ret = mw_region_collection_add(col, &region);
 	assert(ret);
+	assert(cb_count == 17);
 	assert(col->region_count == 1);
 	assert(col->regions[0].addr == 0x0);
 	assert(col->regions[0].size == 0x300000);
