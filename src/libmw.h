@@ -68,16 +68,22 @@ bool mw_next_subrange(struct mw_subcontext *, struct mw_region *);
  * appropriate.
  */
 
-typedef void (mw_region_cb)(void);
+#define	MW_REGION_PERMS		1
+#define	MW_REGION_INSERT	2
+#define	MW_REGION_EXPAND	3
+
+typedef void (mw_region_cb)(int, const struct mw_region *,
+    const struct mw_region *, void *);
 
 struct mw_region_collection {
 	unsigned int region_count;
 	unsigned int alloc_count;
 	mw_region_cb *region_cb;
+	void *region_cb_ctx;
 	struct mw_region *regions;
 };
 
-struct mw_region_collection *mw_region_collection_alloc(mw_region_cb *);
+struct mw_region_collection *mw_region_collection_alloc(mw_region_cb *, void *);
 bool mw_region_collection_add(struct mw_region_collection *,
     struct mw_region *);
 void mw_region_collection_free(struct mw_region_collection *);

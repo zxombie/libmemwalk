@@ -33,6 +33,25 @@
 #ifndef _REGIONS_H_
 #define _REGIONS_H_
 
+struct region {
+	uintptr_t	addr;
+	size_t		size;
+	uint64_t	perms;
+	int		change;
+	bool		have_old;
+	uintptr_t	old_addr;
+	size_t		old_size;
+	uint64_t	old_perms;
+};
+
+struct region_ctx {
+	unsigned int cb_count;
+	unsigned int count;
+	struct region regions[];
+};
+
+mw_region_cb region_cb;
+
 void test_add_same_perms(void);
 void test_add_less_perms(void);
 void test_add_more_perms(void);

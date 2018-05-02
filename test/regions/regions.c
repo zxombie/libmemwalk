@@ -32,7 +32,62 @@
 
 #include <assert.h>
 
+#include <libmw.h>
+
 #include "regions.h"
+
+void
+region_cb(int change, const struct mw_region *region,
+    const struct mw_region *old, void *ctx)
+{
+	struct region_ctx *rctx = ctx;
+
+	assert(region != NULL);
+	assert(ctx != NULL);
+	assert(rctx->cb_count < rctx->count);
+	assert(region->addr == rctx->regions[rctx->cb_count].addr);
+	assert(region->size == rctx->regions[rctx->cb_count].size);
+	assert(region->perms == rctx->regions[rctx->cb_count].perms);
+	assert(change == rctx->regions[rctx->cb_count].change);
+
+	if (rctx->regions[rctx->cb_count].have_old) {
+		assert(old != NULL);
+		assert(old->addr == rctx->regions[rctx->cb_count].old_addr);
+		assert(old->size == rctx->regions[rctx->cb_count].old_size);
+		assert(old->perms == rctx->regions[rctx->cb_count].old_perms);
+	} else {
+		assert(old == NULL);
+		assert(rctx->regions[rctx->cb_count].old_addr == 0);
+		assert(rctx->regions[rctx->cb_count].old_size == 0);
+		assert(rctx->regions[rctx->cb_count].old_perms == 0);
+	}
+
+	switch (change) {
+	case MW_REGION_PERMS:
+		assert(old != NULL);
+		/* The new region should be no larger */
+		assert(old->addr <= region->addr);
+		assert(old->addr + old->size >= region->addr + region->size);
+		assert(old->size >= region->size);
+		assert(old->perms != region->perms);
+		break;
+	case MW_REGION_INSERT:
+		assert(old == NULL);
+		break;
+	case MW_REGION_EXPAND:
+		assert(old != NULL);
+		/* The new region should be larger */
+		assert(region->addr + region->size == old->addr ||
+		    region->addr == old->addr + old->size);
+		assert(old->perms == region->perms);
+		break;
+	default:
+		/* We received an invalid change */
+		assert(false);
+	}
+
+	rctx->cb_count++;
+}
 
 int
 main(int argc, char *argv[])
