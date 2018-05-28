@@ -34,6 +34,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -95,7 +96,7 @@ main(int argc, char *argv[])
 		assert(i < nitems(tests));
 		perm_string(prot, region.perms);
 		perm_string(expected_prot, tests[i].expected);
-		printf("%lx - %lx: %s %s\n", region.addr,
+		printf("%" PRIxPTR " - %" PRIxPTR ": %s %s\n", region.addr,
 		    region.addr + region.size, prot, expected_prot);
 		assert(tests[i].expected == region.perms);
 		i++;

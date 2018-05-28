@@ -31,6 +31,7 @@
  */
 
 #include <err.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,13 +69,13 @@ main(int argc, char *argv[])
 
 		perm_string(perm, region.perms);
 		perm_string(max_perm, region.max_perms);
-		printf("%16lx - %16lx: %s %s\n", region.addr,
+		printf("%16" PRIxPTR " - %16" PRIxPTR ": %s %s\n", region.addr,
 		    region.addr + region.size, perm, max_perm);
 
 		subctx = mw_alloc_subcontext(&region);
 
 		while (mw_next_subrange(subctx, &subregion)) {
-			printf("\t%16lx - %16lx\n", subregion.addr,
+			printf("\t%16" PRIxPTR " - %16" PRIxPTR "\n", subregion.addr,
 			    subregion.addr + subregion.size);
 		}
 

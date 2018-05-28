@@ -34,6 +34,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -74,7 +75,7 @@ test(size_t idx)
 		assert(!found);
 		perm_string(prot, region.perms);
 		perm_string(expected_prot, tests[idx].expected);
-		printf("%#lx - %#lx: %s %s\n", region.addr,
+		printf("%#" PRIxPTR " - %#" PRIxPTR ": %s %s\n", region.addr,
 		    region.addr + region.size, prot, expected_prot);
 		assert(tests[idx].expected == region.perms);
 		found = true;
