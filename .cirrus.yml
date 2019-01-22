@@ -1,7 +1,6 @@
-freebsd_instance:
-  image: freebsd-12-0-release-amd64
-
 freebsd_task:
+  freebsd_instance:
+    image: freebsd-12-0-release-amd64
   install_script:
     - pkg install -y cmake
   script:
@@ -16,10 +15,9 @@ freebsd_task:
     - ./test/mmap/mmap
     - ./test/regions/regions
 
-osx_instance:
-  image: mojave-base
-
 osx_task:
+  osx_instance:
+    image: mojave-base
   install_script:
     - brew install cmake
   script:
