@@ -1,0 +1,19 @@
+freebsd_instance:
+  image: freebsd-12-0-release-amd64
+
+configure_task:
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+
+build_task:
+  depends_on: configure
+  script:
+    - cd build
+    - make
+
+test_task:
+  depends_on: build
+  script:
+    - ./build/test/memwalk/memwalk
