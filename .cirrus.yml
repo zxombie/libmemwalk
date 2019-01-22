@@ -31,3 +31,18 @@ osx_task:
     - ./test/mprotect/mprotect
     - ./test/mmap/mmap
     - ./test/regions/regions
+
+linux_task:
+  container:
+    rikorose/gcc-cmake:latest
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+  test_script:
+    - cd build
+    - ./test/memwalk/memwalk
+    - ./test/mprotect/mprotect
+    - ./test/mmap/mmap
+    - ./test/regions/regions
