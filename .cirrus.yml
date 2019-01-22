@@ -33,7 +33,8 @@ osx_task:
     - ./test/regions/regions
 
 linux_task:
-  container: rikorose/gcc-cmake:latest
+  container:
+    image: rikorose/gcc-cmake:latest
   script:
     - mkdir build
     - cd build
