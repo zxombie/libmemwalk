@@ -1,8 +1,12 @@
 freebsd_instance:
   image: freebsd-12-0-release-amd64
+osx_instance:
+  image: mojave-base
 
 freebsd_build_task:
-  install_script: pkg install -y cmake
+  install_script:
+    - [ "$CIRRUS_OS" -eq "freebsd" ] && pkg install -y cmake
+    - [ "$CIRRUS_OS" -eq "darwin" ] && brew install cmake
   script:
     - mkdir build
     - cd build
