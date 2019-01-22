@@ -8,4 +8,9 @@ freebsd_build_task:
     - cd build
     - cmake ..
     - make
+  test_script:
+    - cd build
     - ./test/memwalk/memwalk
+    - ./test/mprotect/mprotect
+    - ./test/mmap/mmap
+    - ./test/regions/regions
