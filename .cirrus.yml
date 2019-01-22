@@ -1,7 +1,9 @@
-freebsd_build_task:
+freebsd_instance:
   image: freebsd-12-0-release-amd64
+
+freebsd_build_task:
+  install_script: pkg install -y cmake
   script:
-    - pkg install -y cmake
     - mkdir build
     - cd build
     - cmake ..
