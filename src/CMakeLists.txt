@@ -16,3 +16,6 @@ add_library (mw
 )
 target_include_directories (mw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${OS_DIR})
 target_link_libraries (mw LINK_PRIVATE ${OS_LIBS})
+
+install(TARGETS mw DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(FILES libmw.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
