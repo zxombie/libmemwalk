@@ -11,7 +11,7 @@ freebsd_task:
   test_script:
     - cd build
     - ./test/memwalk/memwalk
-    - ./test/memwalk/memwalk_remote
+    - ./test/memwalk_remote/memwalk_remote
     - ./test/mprotect/mprotect
     - ./test/mmap/mmap
     - ./test/regions/regions
@@ -44,7 +44,7 @@ linux_task:
   test_script:
     - cd build
     - ./test/memwalk/memwalk
-    - ./test/memwalk/memwalk_remote
+    - ./test/memwalk_remote/memwalk_remote
     - ./test/mprotect/mprotect
     - ./test/mmap/mmap
     - ./test/regions/regions
